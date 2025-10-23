@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Today's Attendance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
@@ -14,12 +14,12 @@
     h1 {
       text-align: center;
       color: #222;
+      margin-bottom: 1.5rem;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1.5rem;
-      background: white;
+      background: #fff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       border-radius: 8px;
       overflow: hidden;
@@ -35,14 +35,10 @@
     }
     tr:last-child td { border-bottom: none; }
 
-    /* Color coding */
+    /* color indicators */
     .on-time { background-color: #e8f8e8; color: #256029; }
     .late { background-color: #fff5e0; color: #8a5b00; }
     .early { background-color: #fde8e8; color: #b71c1c; }
-
-    @media (max-width: 600px) {
-      th, td { font-size: 0.9rem; }
-    }
   </style>
 </head>
 <body>
@@ -59,13 +55,13 @@
     <tbody>
       {% for r in records %}
       <tr class="
-          {% if 'Left Early' in r.status %}
-            early
-          {% elif 'Late' in r.status %}
-            late
-          {% else %}
-            on-time
-          {% endif %}
+        {% if 'Left Early' in r.status %}
+          early
+        {% elif 'Late' in r.status %}
+          late
+        {% else %}
+          on-time
+        {% endif %}
       ">
         <td>{{ r.staff_name }}</td>
         <td>{{ r.check_in.strftime('%H:%M') if r.check_in else '-' }}</td>
