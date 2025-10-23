@@ -34,7 +34,6 @@ class Attendance(db.Model):
     status = db.Column(db.String(100))
     date = db.Column(db.Date, default=datetime.utcnow().date())
 
-
 # ------------------------------------------------------------
 # EMAIL UTILITY
 # ------------------------------------------------------------
@@ -43,19 +42,16 @@ def send_email(subject, body):
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
     msg["To"] = ", ".join(RECIPIENTS)
-
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.send_message(msg)
     print(f"✅ Email sent: {subject}")
 
-
 # ------------------------------------------------------------
-# HELPER
+# HELPERS
 # ------------------------------------------------------------
 def get_today_records():
     return Attendance.query.filter_by(date=datetime.utcnow().date()).all()
-
 
 def generate_report_text(records, flag):
     lines = []
@@ -66,7 +62,6 @@ def generate_report_text(records, flag):
             lines.append(f"{r.staff_name} – signed out at {r.check_out.strftime('%H:%M')}")
     return "\n".join(lines) or "No issues so far ✅"
 
-
 # ------------------------------------------------------------
 # ROUTES
 # ------------------------------------------------------------
@@ -74,19 +69,16 @@ def generate_report_text(records, flag):
 def index():
     return render_template("index.html")
 
-
 @app.route("/sign_in", methods=["POST"])
 def sign_in():
     name = request.form["name"].strip().title()
     now = datetime.now()
     cutoff = time(6, 15)
     status = "On Time" if now.time() <= cutoff else "Late"
-
     record = Attendance(staff_name=name, check_in=now, status=status)
     db.session.add(record)
     db.session.commit()
     return f"{name} signed in at {now.strftime('%H:%M:%S')} ({status})"
-
 
 @app.route("/sign_out", methods=["POST"])
 def sign_out():
@@ -106,28 +98,23 @@ def sign_out():
     db.session.commit()
     return f"{name} signed out at {now.strftime('%H:%M:%S')} ({record.status})"
 
-
 @app.route("/report")
 def report():
     records = get_today_records()
     return render_template("report.html", records=records)
 
-
 @app.route("/api/report")
 def api_report():
     records = get_today_records()
-    return jsonify(
-        [
-            {
-                "name": r.staff_name,
-                "check_in": r.check_in.strftime("%H:%M") if r.check_in else "-",
-                "check_out": r.check_out.strftime("%H:%M") if r.check_out else "-",
-                "status": r.status,
-            }
-            for r in records
-        ]
-    )
-
+    return jsonify([
+        {
+            "name": r.staff_name,
+            "check_in": r.check_in.strftime("%H:%M") if r.check_in else "-",
+            "check_out": r.check_out.strftime("%H:%M") if r.check_out else "-",
+            "status": r.status,
+        }
+        for r in records
+    ])
 
 # ------------------------------------------------------------
 # TEST EMAIL ROUTE
@@ -145,12 +132,10 @@ def test_email():
     except Exception as e:
         return f"❌ Failed to send email: {e}"
 
-
 # ------------------------------------------------------------
-# AUTOMATIC DAILY EMAIL JOBS
+# AUTOMATED EMAIL SCHEDULER
 # ------------------------------------------------------------
 scheduler = BackgroundScheduler()
-
 
 @scheduler.scheduled_job("cron", hour=6, minute=20)
 def morning_report():
@@ -158,18 +143,16 @@ def morning_report():
     body = generate_report_text(records, "morning")
     send_email("⏰ Morning Attendance Report (6:20 AM)", body)
 
-
 @scheduler.scheduled_job("cron", hour=12, minute=50)
 def afternoon_report():
     records = get_today_records()
     body = generate_report_text(records, "afternoon")
     send_email("🏁 Afternoon Departure Report (12:50 PM)", body)
 
-
 scheduler.start()
 
 # ------------------------------------------------------------
-# RUN
+# MAIN ENTRY POINT
 # ------------------------------------------------------------
 if __name__ == "__main__":
     with app.app_context():
