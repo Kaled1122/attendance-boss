@@ -1,0 +1,5 @@
+Flask
+Flask-SQLAlchemy
+python-dotenv
+APScheduler
+psycopg2-binary
